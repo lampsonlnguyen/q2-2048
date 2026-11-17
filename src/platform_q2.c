@@ -70,7 +70,7 @@ void *memcpy(void *dest, const void *src, __SIZE_TYPE__ length)
     return dest;
 }
 
-static int load(void)
+static void load(void)
 {
     struct savefile file;
     int fd = (int)sc(SYS_open, (long)SAVE_FILE, O_CLOEXEC, 0, 0, 0, 0);
@@ -80,11 +80,10 @@ static int load(void)
         if (size == (long)sizeof file && file.version == SAVE_VERSION && game_valid(&file.game)) {
             app.game = file.game;
             if (game_can_move(&app.game))
-                return 1;
+                return;
         }
     }
     game_new(&app.game, &app.rng);
-    return 0;
 }
 
 static void save(void)
@@ -134,10 +133,13 @@ int q2_main(void)
         sc(SYS_ioctl, fb, FBIOGET_FSCREENINFO, (long)fix, 0, 0, 0))
         return 1;
     unsigned stride = fix[11] / sizeof(u32), front = var[5];
-    if (var[0] != HEIGHT || var[1] != WIDTH || var[3] < 2 * WIDTH || var[4] ||
-        (front != 0 && front != WIDTH) || var[6] != 32 || var[8] != 16 ||
-        var[11] != 8 || var[14] != 0 || fix[11] % sizeof(u32) || stride < HEIGHT ||
-        fix[5] / (2 * WIDTH) < fix[11])
+    if (var[0] != HEIGHT || var[1] != WIDTH || var[4] || var[6] != 32 ||
+        var[8] != 16 || fix[11] % sizeof(u32) || stride < HEIGHT)
+        return 1;
+    unsigned rows = fix[5] / fix[11];
+    if (rows > var[3])
+        rows = var[3];
+    if (rows < WIDTH || front > rows - WIDTH)
         return 1;
     long mapped = sc(SYS_mmap, 0, (long)fix[5], 3, 1, fb, 0); /* RW, MAP_SHARED */
     if (mapped < 0 && mapped >= -4095)
@@ -150,26 +152,32 @@ int q2_main(void)
     long now[2] = {0};
     sc(SYS_clock_gettime, 1, (long)now, 0, 0, 0, 0); /* CLOCK_MONOTONIC */
     app.rng = (u32)now[0] ^ (u32)now[1];
-    int resumed = load();
+    load();
     app_start(&app);
-    if (!resumed)
-        save();
-    unsigned back = front ? 0 : WIDTH;
+    unsigned visible = front;
+    int can_pan = rows >= 2 * WIDTH && (front == 0 || front == WIDTH);
     struct { int fd; short events, revents; } poll_input = {input, 1, 0};
     int redraw = 1;
     while (app.mode != EXIT) {
         if (redraw) {
             render(&app, canvas);
-            paint(memory + back * stride, stride);
-            var[5] = back;
-            if (sc(SYS_ioctl, fb, FBIOPAN_DISPLAY, (long)var, 0, 0, 0))
-                break;
-            back = back ? 0 : WIDTH;
+            if (can_pan) {
+                unsigned back = visible ? 0 : WIDTH;
+                paint(memory + back * stride, stride);
+                var[5] = back;
+                if (sc(SYS_ioctl, fb, FBIOPAN_DISPLAY, (long)var, 0, 0, 0) == 0)
+                    visible = back;
+                else
+                    can_pan = 0;
+            }
+            /* Some framebuffer modes reject page flips. Draw on the visible page. */
+            if (!can_pan)
+                paint(memory + visible * stride, stride);
             redraw = 0;
         }
 
         long ready = sc(SYS_poll, (long)&poll_input, 1, -1, 0, 0, 0);
-        if (ready == -4) /* EINTR */
+        if (ready == 0 || ready == -4) /* No events or EINTR. */
             continue;
         if (ready < 0 || !(poll_input.revents & 1))
             break;
@@ -188,7 +196,7 @@ int q2_main(void)
         }
     }
 
-    if (var[5] != front) {
+    if (visible != front) {
         var[5] = front;
         sc(SYS_ioctl, fb, FBIOPAN_DISPLAY, (long)var, 0, 0, 0);
     }
