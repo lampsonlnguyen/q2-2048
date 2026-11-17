@@ -1,6 +1,7 @@
 Q2_CC ?= clang
 Q2_LD ?= ld.lld
 CFLAGS ?= -O2 -Wall -Wextra -Werror
+Q2_CFLAGS ?= -Oz -Wall -Wextra -Werror
 Q2_FLAGS = --target=mipsel-linux-gnu -march=mips32r2 -mabi=32 -mfp64 -mnan=2008 -mabs=2008 \
 	-mno-abicalls -fno-pic -G0 -ffreestanding -fno-builtin -fno-stack-protector \
 	-fno-unwind-tables -fno-asynchronous-unwind-tables
@@ -13,7 +14,7 @@ all: dist/q2-2048.zip
 
 build/%.o: src/%.c src/game.h src/screen.h src/font.h
 	mkdir -p $(@D)
-	$(Q2_CC) $(Q2_FLAGS) $(CFLAGS) -std=c11 -c $< -o $@
+	$(Q2_CC) $(Q2_FLAGS) $(Q2_CFLAGS) -std=c11 -c $< -o $@
 
 $(CARD)/q2-2048: $(OBJECTS)
 	mkdir -p $(@D)

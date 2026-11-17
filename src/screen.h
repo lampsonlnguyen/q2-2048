@@ -11,6 +11,6 @@ struct rect direction_rect(enum direction direction);
 struct rect option_rect(int choice);
 int app_options(enum mode mode, const char *const **labels);
 const char *app_heading(enum mode mode);
-void render(const struct app *app, u32 *pixels);
+void render(const struct app *app, u32 *pixels, unsigned stride);
 
 #endif

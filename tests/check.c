@@ -50,7 +50,7 @@ static void check_controls(void)
     assert(app_input(&app, "k u 218"));
     assert(app.mode == WON && app.game.score == 2048);
 
-    render(&app, pixels);
+    render(&app, pixels, HEIGHT);
     assert(app_input(&app, "k u 218"));
     assert(app.mode == PLAY && app.game.continued);
     app_input(&app, "t d 327 16");
@@ -67,7 +67,7 @@ static void check_controls(void)
     app_input(&app, "t d 90 100");
     assert(app_input(&app, "t u 170 101"));
     assert(app.direction == RIGHT && app.game.tile[2] == 2 && app.game.tile[3] == 4);
-    render(&app, pixels);
+    render(&app, pixels, HEIGHT);
 
     app.game = (struct game){.tile = {2,4,2,4, 4,2,4,2, 2,4,2,4, 4,2,4,2}};
     assert(!game_can_move(&app.game));

@@ -50,7 +50,6 @@ struct savefile {
     struct game game;
 };
 
-static u32 canvas[WIDTH * HEIGHT];
 static struct app app;
 
 void *memset(void *dest, int value, __SIZE_TYPE__ length)
@@ -117,14 +116,6 @@ static int bind_input(void)
     return -1;
 }
 
-static void paint(u32 *page, unsigned stride)
-{
-    /* The view's (x, y) maps to portrait panel (HEIGHT - 1 - y, x). */
-    for (int y = 0; y < WIDTH; ++y)
-        for (int x = 0; x < HEIGHT; ++x)
-            page[y * stride + x] = canvas[(HEIGHT - 1 - x) * WIDTH + y];
-}
-
 int q2_main(void)
 {
     unsigned var[40], fix[17];
@@ -160,10 +151,9 @@ int q2_main(void)
     int redraw = 1;
     while (app.mode != EXIT) {
         if (redraw) {
-            render(&app, canvas);
             if (can_pan) {
                 unsigned back = visible ? 0 : WIDTH;
-                paint(memory + back * stride, stride);
+                render(&app, memory + back * stride, stride);
                 var[5] = back;
                 if (sc(SYS_ioctl, fb, FBIOPAN_DISPLAY, (long)var, 0, 0, 0) == 0)
                     visible = back;
@@ -172,7 +162,7 @@ int q2_main(void)
             }
             /* Some framebuffer modes reject page flips. Draw on the visible page. */
             if (!can_pan)
-                paint(memory + visible * stride, stride);
+                render(&app, memory + visible * stride, stride);
             redraw = 0;
         }
 
