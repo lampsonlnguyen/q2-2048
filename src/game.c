@@ -1,4 +1,5 @@
-/* Native port of Gabriele Cirulli's 2048 rules. See ../LICENSE.txt. */
+/* Native port of Gabriele Cirulli's 2048 rules. See ../LICENSE.txt.
+ * Byte-sized tile exponents follow Maurits van der Schee's 2048.c. */
 #include "game.h"
 
 static u32 random_word(u32 *rng)
@@ -12,13 +13,14 @@ static u32 random_word(u32 *rng)
 
 static void spawn(struct game *game, u32 *rng)
 {
-    int empty[CELLS], count = 0;
+    unsigned char empty[CELLS];
+    unsigned count = 0;
     for (int i = 0; i < CELLS; ++i)
         if (!game->tile[i])
-            empty[count++] = i;
+            empty[count++] = (unsigned char)i;
     if (count) {
-        u32 value = random_word(rng) % 10 == 0 ? 4 : 2;
-        game->tile[empty[random_word(rng) % (u32)count]] = value;
+        unsigned char value = random_word(rng) % 10 == 0 ? 2 : 1;
+        game->tile[empty[random_word(rng) % count]] = value;
     }
 }
 
@@ -43,21 +45,21 @@ int game_slide(struct game *game, enum direction direction)
 {
     int moved = 0;
     for (int line = 0; line < SIDE; ++line) {
-        u32 values[SIDE], result[SIDE] = {0};
+        unsigned char values[SIDE], result[SIDE] = {0};
         int count = 0, out = 0;
         for (int i = 0; i < SIDE; ++i) {
-            u32 value = game->tile[cell(direction, line, i)];
+            unsigned char value = game->tile[cell(direction, line, i)];
             if (value)
                 values[count++] = value;
         }
 
         for (int i = 0; i < count; ++i) {
-            u32 value = values[i];
-            if (i + 1 < count && value == values[i + 1] && value < MAX_TILE) {
-                value *= 2;
+            unsigned char value = values[i];
+            if (i + 1 < count && value == values[i + 1] && value < MAX_EXPONENT) {
+                ++value;
                 ++i;
-                game->score += value;
-                if (value == 2048)
+                game->score += 1u << value;
+                if (value == GOAL_EXPONENT)
                     game->won = 1;
             }
             result[out++] = value;
@@ -76,7 +78,7 @@ int game_slide(struct game *game, enum direction direction)
 
 int game_move(struct game *game, enum direction direction, u32 *rng)
 {
-    if (!game_slide(game, direction))
+    if ((game->won && !game->continued) || !game_slide(game, direction))
         return 0;
     spawn(game, rng);
     return 1;
@@ -85,10 +87,10 @@ int game_move(struct game *game, enum direction direction, u32 *rng)
 int game_can_move(const struct game *game)
 {
     for (int i = 0; i < CELLS; ++i) {
-        u32 tile = game->tile[i];
+        unsigned char tile = game->tile[i];
         if (!tile)
             return 1;
-        if (tile == MAX_TILE)
+        if (tile == MAX_EXPONENT)
             continue;
         if (i % SIDE != SIDE - 1 && tile == game->tile[i + 1])
             return 1;
@@ -104,9 +106,8 @@ int game_valid(const struct game *game)
     if (game->score > game->best || game->won > 1 || game->continued > game->won)
         return 0;
     for (int i = 0; i < CELLS; ++i) {
-        u32 tile = game->tile[i];
-        if (tile == 1 || tile > MAX_TILE || (tile & (tile - 1)) ||
-            (tile >= 2048 && !game->won))
+        unsigned char tile = game->tile[i];
+        if (tile > MAX_EXPONENT || (tile >= GOAL_EXPONENT && !game->won))
             return 0;
         occupied += tile != 0;
     }

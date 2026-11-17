@@ -1,13 +1,13 @@
 #ifndef Q2_2048_GAME_H
 #define Q2_2048_GAME_H
 
-enum { SIDE = 4, CELLS = SIDE * SIDE, MAX_TILE = 131072 };
+enum { SIDE = 4, CELLS = SIDE * SIDE, GOAL_EXPONENT = 11, MAX_EXPONENT = 17 };
 enum direction { UP, RIGHT, DOWN, LEFT, DIRECTIONS };
 
 typedef unsigned int u32;
 
 struct game {
-    u32 tile[CELLS];
+    unsigned char tile[CELLS]; /* 0 is empty, otherwise the exponent of two. */
     u32 score, best, won, continued;
 };
 

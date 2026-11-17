@@ -8,28 +8,28 @@ static u32 pixels[WIDTH * HEIGHT];
 
 static void check_merges(void)
 {
-    struct game game = {.tile = {2, 2, 2, 2, 2, 2, 4}};
+    struct game game = {.tile = {1, 1, 1, 1, 1, 1, 2}};
     assert(game_slide(&game, LEFT));
-    assert(game.tile[0] == 4 && game.tile[1] == 4 && !game.tile[2]);
-    assert(game.tile[4] == 4 && game.tile[5] == 4 && !game.tile[6]);
+    assert(game.tile[0] == 2 && game.tile[1] == 2 && !game.tile[2]);
+    assert(game.tile[4] == 2 && game.tile[5] == 2 && !game.tile[6]);
     assert(game.score == 12 && game.best == 12);
 
-    game = (struct game){.tile = {2, 2, 2}};
+    game = (struct game){.tile = {1, 1, 1}};
     assert(game_slide(&game, RIGHT));
-    assert(!game.tile[1] && game.tile[2] == 2 && game.tile[3] == 4);
+    assert(!game.tile[1] && game.tile[2] == 1 && game.tile[3] == 2);
 
-    game = (struct game){.tile = {[4] = 16, [12] = 16}};
+    game = (struct game){.tile = {[4] = 4, [12] = 4}};
     assert(game_slide(&game, UP));
-    assert(game.tile[0] == 32 && !game.tile[4] && !game.tile[12]);
+    assert(game.tile[0] == 5 && !game.tile[4] && !game.tile[12]);
 
-    game = (struct game){.tile = {[3] = 8, [7] = 8, [11] = 8}};
+    game = (struct game){.tile = {[3] = 3, [7] = 3, [11] = 3}};
     assert(game_slide(&game, DOWN));
-    assert(!game.tile[7] && game.tile[11] == 8 && game.tile[15] == 16);
+    assert(!game.tile[7] && game.tile[11] == 3 && game.tile[15] == 4);
 
-    game = (struct game){.tile = {2, 4}};
+    game = (struct game){.tile = {1, 2}};
     u32 rng = 127;
     assert(!game_move(&game, LEFT, &rng));
-    assert(rng == 127 && game.tile[0] == 2 && game.tile[1] == 4);
+    assert(rng == 127 && game.tile[0] == 1 && game.tile[1] == 2);
     assert(game_move(&game, RIGHT, &rng));
     int occupied = 0;
     for (int i = 0; i < CELLS; ++i)
@@ -39,7 +39,7 @@ static void check_merges(void)
 
 static void check_controls(void)
 {
-    struct app app = {.game = {.tile = {1024, 1024}}, .rng = 9};
+    struct app app = {.game = {.tile = {10, 10}}, .rng = 9};
     app_start(&app);
     assert(app.mode == PLAY && app.direction == LEFT);
     app_input(&app, "w -13");
@@ -51,6 +51,8 @@ static void check_controls(void)
     assert(app.mode == WON && app.game.score == 2048);
 
     render(&app, pixels, HEIGHT);
+    for (int i = 0; i < WIDTH * HEIGHT; ++i)
+        assert(pixels[i] >> 24 == 0xff);
     assert(app_input(&app, "k u 218"));
     assert(app.mode == PLAY && app.game.continued);
     app_input(&app, "t d 327 16");
@@ -63,19 +65,19 @@ static void check_controls(void)
     app_input(&app, "k u 170");
     assert(app.mode == PLAY && app.game.best == 2048);
 
-    app.game = (struct game){.tile = {2, 4}};
+    app.game = (struct game){.tile = {1, 2}};
     app_input(&app, "t d 90 100");
     assert(app_input(&app, "t u 170 101"));
-    assert(app.direction == RIGHT && app.game.tile[2] == 2 && app.game.tile[3] == 4);
+    assert(app.direction == RIGHT && app.game.tile[2] == 1 && app.game.tile[3] == 2);
     render(&app, pixels, HEIGHT);
 
-    app.game = (struct game){.tile = {2,4,2,4, 4,2,4,2, 2,4,2,4, 4,2,4,2}};
+    app.game = (struct game){.tile = {1,2,1,2, 2,1,2,1, 1,2,1,2, 2,1,2,1}};
     assert(!game_can_move(&app.game));
     app_start(&app);
     assert(app.mode == LOST);
     assert(app_input(&app, "k u 218"));
     assert(app.mode == PLAY && game_valid(&app.game));
-    app.game.tile[0] = 3;
+    app.game.tile[0] = MAX_EXPONENT + 1;
     assert(!game_valid(&app.game));
 }
 

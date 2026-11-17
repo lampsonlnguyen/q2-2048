@@ -14,7 +14,7 @@ static void fill(u32 *pixels, unsigned stride, struct rect area, u32 color)
     for (int x = area.x; x < area.x + area.w; ++x) {
         u32 *row = pixels + x * stride;
         for (int column = left; column < right; ++column)
-            row[column] = color;
+            row[column] = 0xff000000u | color;
     }
 }
 
@@ -33,7 +33,7 @@ static void text(u32 *pixels, unsigned stride, struct rect area, const char *str
             for (int column = 0; column < w; ++column) {
                 int bit = glyph_offset + row * w + column;
                 if (f20_px[bit / 8] & (1u << (bit % 8)))
-                    pixels[(x + column) * stride + (HEIGHT - 1 - y - row)] = color;
+                    pixels[(x + column) * stride + (HEIGHT - 1 - y - row)] = 0xff000000u | color;
             }
         }
         x += w;
@@ -69,17 +69,14 @@ static void board(const struct game *game, u32 *pixels, unsigned stride)
     enum { GAP = 4, TILE = (BOARD_SIZE - (SIDE + 1) * GAP) / SIDE };
     fill(pixels, stride, (struct rect){BOARD_X, BOARD_Y, BOARD_SIZE, BOARD_SIZE}, GRID);
     for (int i = 0; i < CELLS; ++i) {
-        u32 value = game->tile[i];
-        int power = 0;
-        for (u32 temp = value; temp > 1; temp >>= 1)
-            ++power;
+        unsigned char power = game->tile[i];
         int x = BOARD_X + GAP + (i % SIDE) * (TILE + GAP);
         int y = BOARD_Y + GAP + (i / SIDE) * (TILE + GAP);
         struct rect tile = {x, y, TILE, TILE};
         int colors = (int)(sizeof tile_colors / sizeof tile_colors[0]);
         fill(pixels, stride, tile, power < colors ? tile_colors[power] : 0x3c3a32);
-        if (value)
-            number(pixels, stride, tile, value, value <= 4 ? BROWN : LIGHT);
+        if (power)
+            number(pixels, stride, tile, 1u << power, power <= 2 ? BROWN : LIGHT);
     }
 }
 

@@ -47,7 +47,9 @@ __asm__(".text\n.set noreorder\n.globl sc\nsc:\n"
 
 struct savefile {
     u32 version;
-    struct game game;
+    /* Keep the existing card save format: tile values are stored as words. */
+    u32 tile[CELLS];
+    u32 score, best, won, continued;
 };
 
 static struct app app;
@@ -76,10 +78,25 @@ static void load(void)
     if (fd >= 0) {
         long size = sc(SYS_read, fd, (long)&file, sizeof file, 0, 0, 0);
         sc(SYS_close, fd, 0, 0, 0, 0, 0);
-        if (size == (long)sizeof file && file.version == SAVE_VERSION && game_valid(&file.game)) {
-            app.game = file.game;
-            if (game_can_move(&app.game))
-                return;
+        if (size == (long)sizeof file && file.version == SAVE_VERSION) {
+            struct game game = { .score = file.score, .best = file.best,
+                                 .won = file.won, .continued = file.continued };
+            for (int i = 0; i < CELLS; ++i) {
+                u32 tile = file.tile[i];
+                if (tile == 1 || tile > (1u << MAX_EXPONENT) || (tile & (tile - 1))) {
+                    game.tile[i] = MAX_EXPONENT + 1;
+                    break;
+                }
+                while (tile > 1) {
+                    ++game.tile[i];
+                    tile >>= 1;
+                }
+            }
+            if (game_valid(&game)) {
+                app.game = game;
+                if (game_can_move(&app.game))
+                    return;
+            }
         }
     }
     game_new(&app.game, &app.rng);
@@ -87,7 +104,11 @@ static void load(void)
 
 static void save(void)
 {
-    struct savefile file = { .version = SAVE_VERSION, .game = app.game };
+    const struct game *game = &app.game;
+    struct savefile file = { .version = SAVE_VERSION, .score = game->score, .best = game->best,
+                             .won = game->won, .continued = game->continued };
+    for (int i = 0; i < CELLS; ++i)
+        file.tile[i] = game->tile[i] ? 1u << game->tile[i] : 0;
     int fd = (int)sc(SYS_open, (long)SAVE_TEMP, O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC,
                      0644, 0, 0, 0);
     if (fd < 0) {
