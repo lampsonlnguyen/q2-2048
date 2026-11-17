@@ -32,3 +32,17 @@ The build produces `dist/q2-2048.zip`. The binary uses the Q2's MIPS32r2, little
 The 16-byte board stores tile exponents, following [2048.c](https://github.com/mevdschee/2048.c).
 
 The Q2 launch, framebuffer, and input socket follow [Buddy](https://github.com/DiamondBond/q2-fidget). The Liberation Sans Bold bitmap comes from [GrooveBox](https://github.com/DiamondBond/q2-groovebox). See [LICENSE.txt](LICENSE.txt) for the game, Buddy code, and font notices.
+
+## Automatic builds and releases
+
+GitHub Actions tests and builds each push to `main` and every pull request. Download the **q2-2048-card-app** artifact from a successful run, or start a build with **Actions → q2-2048 → Run workflow**.
+
+Push an unused version tag to publish a release automatically:
+
+```sh
+git pull --ff-only
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+Once the build and package checks pass, Actions creates the release and attaches **q2-2048.zip** directly. Re-running the tag build replaces that release's ZIP. Branch pushes and manual branch builds only save Actions artifacts.
