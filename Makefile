@@ -20,9 +20,9 @@ $(CARD)/q2-2048: $(OBJECTS)
 	mkdir -p $(@D)
 	$(Q2_LD) -m elf32ltsmip -static -e __start -s -z noexecstack -o $@ $^
 
-$(CARD)/q2app: q2app
+$(CARD)/q2app: q2app Makefile
 	mkdir -p $(@D)
-	cp $< $@
+	tr -d '\r' < $< > $@
 
 $(CARD)/LICENSE-2048.txt: LICENSE.txt
 	mkdir -p $(@D)
