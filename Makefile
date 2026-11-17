@@ -8,7 +8,6 @@ Q2_FLAGS = --target=mipsel-linux-gnu -march=mips32r2 -mabi=32 -mfp64 -mnan=2008 
 SOURCES = src/game.c src/input.c src/screen.c
 OBJECTS = $(patsubst src/%.c,build/%.o,$(SOURCES) src/platform_q2.c)
 CARD = dist/.2048
-LICENSES = $(CARD)/LICENSE-2048.txt $(CARD)/LICENSE-BUDDY.txt $(CARD)/LICENSE-FONT.txt
 
 all: dist/q2-2048.zip
 
@@ -24,16 +23,12 @@ $(CARD)/q2app: q2app Makefile
 	mkdir -p $(@D)
 	tr -d '\r' < $< > $@
 
-$(CARD)/LICENSE-2048.txt: LICENSE.txt
+$(CARD)/LICENSE.txt: LICENSE.txt
 	mkdir -p $(@D)
 	cp $< $@
 
-$(CARD)/LICENSE-%.txt: LICENSE-%.txt
-	mkdir -p $(@D)
-	cp $< $@
-
-dist/q2-2048.zip: $(CARD)/q2-2048 $(CARD)/q2app $(LICENSES)
-	cd dist && zip -q q2-2048.zip $(patsubst dist/%,%,$^)
+dist/q2-2048.zip: $(CARD)/q2-2048 $(CARD)/q2app $(CARD)/LICENSE.txt
+	cd dist && rm -f q2-2048.zip && zip -q q2-2048.zip $(patsubst dist/%,%,$^)
 
 build/check: tests/check.c $(SOURCES) src/game.h src/screen.h src/font.h
 	mkdir -p $(@D)

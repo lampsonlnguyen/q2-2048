@@ -1,5 +1,5 @@
 /* MIPS startup and syscall trampoline from Buddy by Diamond Bond.
- * See ../LICENSE-BUDDY.txt.
+ * See ../LICENSE.txt.
  */
 #include "screen.h"
 

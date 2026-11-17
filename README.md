@@ -31,4 +31,4 @@ The build produces `dist/q2-2048.zip`. The binary uses the Q2's MIPS32r2, little
 
 The 16-byte board stores tile exponents, following [2048.c](https://github.com/mevdschee/2048.c).
 
-The Q2 launch, framebuffer, and input socket follow [Buddy](https://github.com/DiamondBond/q2-fidget). The Liberation Sans Bold bitmap comes from [GrooveBox](https://github.com/DiamondBond/q2-groovebox). See the original game's [MIT license](LICENSE.txt), [Buddy license](LICENSE-BUDDY.txt), and [font license](LICENSE-FONT.txt).
+The Q2 launch, framebuffer, and input socket follow [Buddy](https://github.com/DiamondBond/q2-fidget). The Liberation Sans Bold bitmap comes from [GrooveBox](https://github.com/DiamondBond/q2-groovebox). See [LICENSE.txt](LICENSE.txt) for the game, Buddy code, and font notices.
