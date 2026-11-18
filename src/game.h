@@ -20,6 +20,7 @@ struct app {
     enum direction direction;
     int choice, wheel, touch_x, touch_y, touching;
     int save_failed;
+    int light; /* Inherit Q2 Pod light/dark appearance at launch. */
 };
 
 void game_new(struct game *game, u32 *rng);
