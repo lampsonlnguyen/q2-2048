@@ -59,8 +59,8 @@ static void check_controls(void)
     app.light = 0;
     render(&app, pixels, HEIGHT);
     u32 dark_background = pixels[(WIDTH - 1) * HEIGHT + HEIGHT - 1];
-    assert(light_background == 0xfffaf8efu);
-    assert(dark_background == 0xff101820u);
+    assert(light_background == 0xfffcf7f1u);
+    assert(dark_background == 0xff404040u);
     assert(light_background != dark_background);
     assert(app_input(&app, "k u 218"));
     assert(app.mode == PLAY && app.game.continued);
