@@ -62,19 +62,19 @@ static void number(u32 *pixels, unsigned stride, struct rect area, u32 value, u3
 
 static void board(const struct game *game, u32 *pixels, unsigned stride, int light)
 {
-    /* Classic 2048 hues in light mode; muted jewel tones in dark mode. */
+    /* Match the reference: charcoal dark UI with classic colorful tiles. */
     static const u32 light_tiles[] = {
-        EMPTY, 0xeee4da, 0xede0c8, 0xf2b179, 0xf59563, 0xf67c5f, 0xf65e3b,
-        0xedcf72, 0xedcc61, 0xedc850, 0xedc53f, 0xedc22e
+        0xccbfb1, 0xede4da, 0xece0c7, 0xefb076, 0xef955e, 0xf07c5a, 0xef5f30,
+        0xebcd6d, 0xe9c85c, 0xe7c44b, 0xeac333, 0xe8bd29
     };
     static const u32 dark_tiles[] = {
-        0x303b4c, 0x495a70, 0x5b6882, 0x765c80, 0x87577b, 0x91546c,
-        0x99505a, 0x9a704b, 0x9f8245, 0xb1944b, 0xb6a052, 0xc0a95a
+        0x505050, 0xede4da, 0xece0c7, 0xefb076, 0xef955e, 0xf07c5a, 0xef5f30,
+        0xebcd6d, 0xe9c85c, 0xe7c44b, 0xeac333, 0xe8bd29
     };
     const u32 *tiles = light ? light_tiles : dark_tiles;
     enum { GAP = 4, TILE = (BOARD_SIZE - (SIDE + 1) * GAP) / SIDE };
     fill(pixels, stride, (struct rect){BOARD_X, BOARD_Y, BOARD_SIZE, BOARD_SIZE},
-         light ? GRID : 0x182432);
+         light ? 0xb9ac9e : 0x404040);
     for (int i = 0; i < CELLS; ++i) {
         unsigned char power = game->tile[i];
         int x = BOARD_X + GAP + (i % SIDE) * (TILE + GAP);
@@ -82,10 +82,10 @@ static void board(const struct game *game, u32 *pixels, unsigned stride, int lig
         struct rect tile = {x, y, TILE, TILE};
         int colors = (int)(sizeof light_tiles / sizeof light_tiles[0]);
         fill(pixels, stride, tile, power < colors ? tiles[power] :
-             (light ? 0x3c3a32 : 0xd1ae61));
+             (light ? 0x3c3a32 : 0xdec444));
         if (power)
             number(pixels, stride, tile, 1u << power,
-                   light && power <= 2 ? BROWN : LIGHT);
+                   power <= 2 ? 0x404040 : LIGHT);
     }
 }
  
@@ -94,12 +94,12 @@ void render(const struct app *app, u32 *pixels, unsigned stride)
 {
     const struct game *game = &app->game;
     int light = app->light;
-    u32 background = light ? BACKGROUND : 0x101820;
-    u32 text_color = light ? BROWN : 0xe7edf3;
-    u32 button_color = light ? BUTTON : 0x34475c;
-    u32 control_color = light ? GRID : 0x29394d;
-    u32 selected_color = light ? GOLD : 0xe4b75e;
-    u32 selected_text = light ? BROWN : 0x151d29;
+    u32 background = light ? 0xfcf7f1 : 0x404040;
+    u32 text_color = light ? 0x776e65 : 0xf5f1ec;
+    u32 button_color = light ? 0x887967 : 0x797979;
+    u32 control_color = light ? 0xb9ac9e : 0x6e6e6e;
+    u32 selected_color = light ? GOLD : 0xeac333;
+    u32 selected_text = 0x404040;
     fill(pixels, stride, (struct rect){0, 0, WIDTH, HEIGHT}, background);
     text(pixels, stride, (struct rect){8, 8, BOARD_SIZE, 32}, "2048", text_color);
     struct rect menu = {MENU_X, MENU_Y, MENU_W, MENU_H};
@@ -131,7 +131,7 @@ void render(const struct app *app, u32 *pixels, unsigned stride)
     int count = app_options(app->mode, &labels);
     if (count) {
         fill(pixels, stride, (struct rect){70, 62, 235, 228},
-             light ? BROWN : 0x253447);
+             light ? BROWN : 0x555555);
         text(pixels, stride, (struct rect){70, 70, 235, 31}, app_heading(app->mode), LIGHT);
         for (int i = 0; i < count; ++i) {
             struct rect option = option_rect(i);
