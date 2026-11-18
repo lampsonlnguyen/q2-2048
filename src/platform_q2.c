@@ -137,6 +137,68 @@ static int bind_input(void)
     return -1;
 }
 
+/* Q2 Pod's [IPOD] LIGHT=0/1 is dark/light; Auto inherits the
+ * existing framebuffer appearance before the game draws over it. */
+static int screen_light(const u32 *pixels, unsigned stride)
+{
+    unsigned bright = 0, count = 0;
+    for (int x = 45; x < 330; x += 45)
+        for (int y = 60; y < 270; y += 35) {
+            u32 c = pixels[x * stride + HEIGHT - 1 - y];
+            unsigned l = ((c >> 16) & 255u) * 299u +
+                         ((c >> 8) & 255u) * 587u +
+                         (c & 255u) * 114u;
+            bright += l > 128000u;
+            ++count;
+        }
+    return bright > count / 2;
+}
+
+static int config_light(int fallback)
+{
+    char data[4096];
+    int fd = (int)sc(SYS_open, (long)"/mnt/data/config.ini", O_CLOEXEC, 0, 0, 0, 0);
+    if (fd < 0)
+        return fallback;
+    long n = sc(SYS_read, fd, (long)data, sizeof data - 1, 0, 0, 0);
+    sc(SYS_close, fd, 0, 0, 0, 0, 0);
+    if (n <= 0)
+        return fallback;
+    data[n] = 0;
+    int ipod = 0;
+    for (char *p = data; *p;) {
+        char *end = p;
+        while (*end && *end != '\n')
+            ++end;
+        char *q = p;
+        while (q < end && (*q == ' ' || *q == '\t'))
+            ++q;
+        if (q < end && *q == '[') {
+            const char tag[] = "[IPOD]";
+            int i = 0;
+            while (i < 6 && q + i < end && q[i] == tag[i])
+                ++i;
+            ipod = i == 6;
+        } else if (ipod && end - q >= 5 && q[0] == 'L' && q[1] == 'I' &&
+                   q[2] == 'G' && q[3] == 'H' && q[4] == 'T') {
+            q += 5;
+            while (q < end && (*q == ' ' || *q == '\t'))
+                ++q;
+            if (q < end && *q++ == '=') {
+                while (q < end && (*q == ' ' || *q == '\t'))
+                    ++q;
+                if (q < end && *q == '0')
+                    return 0;
+                if (q < end && *q == '1')
+                    return 1;
+                return fallback;
+            }
+        }
+        p = *end ? end + 1 : end;
+    }
+    return fallback;
+}
+
 int q2_main(void)
 {
     unsigned var[40], fix[17];
@@ -164,6 +226,7 @@ int q2_main(void)
     long now[2] = {0};
     sc(SYS_clock_gettime, 1, (long)now, 0, 0, 0, 0); /* CLOCK_MONOTONIC */
     app.rng = (u32)now[0] ^ (u32)now[1];
+    app.light = config_light(screen_light(memory + front * stride, stride));
     load();
     app_start(&app);
     unsigned visible = front;
