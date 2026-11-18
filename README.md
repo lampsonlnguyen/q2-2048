@@ -18,7 +18,7 @@ A native card app for the Shanling Q2, based on Gabriele Cirulli's 2048. Join ma
 
 The current board and best score are saved to `.2048/state` after a move. A finished board starts a new game on the next launch and keeps your best score.
 
-The game automatically follows Q2 Pod's **Light/Dark** appearance when launched. Light mode keeps the classic beige 2048 palette; dark mode uses a dark navy interface with high-contrast tiles, score labels, controls, and menus. The game checks the firmware's `[IPOD] LIGHT` setting and inherits the current screen appearance when the setting is Auto. There is no separate in-game theme switch or extra asset dependency.
+The game automatically follows Q2 Pod's **Light/Dark** appearance when launched. Light mode uses the warm cream-and-beige palette in the reference image; dark mode uses a charcoal interface with the same classic colorful 2048 tile palette (cream 2/4 tiles, orange and yellow higher tiles), light score labels, controls, and menus. The game checks the firmware's `[IPOD] LIGHT` setting and inherits the current screen appearance when the setting is Auto. There is no separate in-game theme switch or extra asset dependency.
 
 ## Build
 
