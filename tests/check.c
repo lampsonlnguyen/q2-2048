@@ -50,9 +50,18 @@ static void check_controls(void)
     assert(app_input(&app, "k u 218"));
     assert(app.mode == WON && app.game.score == 2048);
 
+    /* Both themes render opaque pixels and use distinct backgrounds. */
+    app.light = 1;
     render(&app, pixels, HEIGHT);
+    u32 light_background = pixels[(WIDTH - 1) * HEIGHT + HEIGHT - 1];
     for (int i = 0; i < WIDTH * HEIGHT; ++i)
         assert(pixels[i] >> 24 == 0xff);
+    app.light = 0;
+    render(&app, pixels, HEIGHT);
+    u32 dark_background = pixels[(WIDTH - 1) * HEIGHT + HEIGHT - 1];
+    assert(light_background == 0xfffaf8efu);
+    assert(dark_background == 0xff101820u);
+    assert(light_background != dark_background);
     assert(app_input(&app, "k u 218"));
     assert(app.mode == PLAY && app.game.continued);
     app_input(&app, "t d 327 16");
