@@ -26,6 +26,12 @@ jobs:
       - name: Verify install package
         run: |
           unzip -t dist/q2-2048.zip
+          for icon in icon.png icon-40.png pane.png; do
+            unzip -Z1 dist/q2-2048.zip | grep -Fx ".2048/$icon"
+          done
+          file dist/.2048/icon.png | grep -F '52 x 52'
+          file dist/.2048/icon-40.png | grep -F '40 x 40'
+          file dist/.2048/pane.png | grep -F '96 x 96'
           unzip -p dist/q2-2048.zip .2048/q2app | grep -Fx 'game=1'
           test -s dist/.2048/LICENSE.txt
           file dist/.2048/q2-2048 | grep -E 'ELF 32-bit LSB.*MIPS'

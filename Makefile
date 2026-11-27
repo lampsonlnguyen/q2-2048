@@ -27,7 +27,11 @@ $(CARD)/LICENSE.txt: LICENSE.txt
 	mkdir -p $(@D)
 	cp $< $@
 
-dist/q2-2048.zip: $(CARD)/q2-2048 $(CARD)/q2app $(CARD)/LICENSE.txt
+$(CARD)/%.png: %.png
+	mkdir -p $(@D)
+	cp $< $@
+
+dist/q2-2048.zip: $(CARD)/q2-2048 $(CARD)/q2app $(CARD)/LICENSE.txt $(CARD)/icon.png $(CARD)/icon-40.png $(CARD)/pane.png
 	cd dist && rm -f q2-2048.zip && zip -q q2-2048.zip $(patsubst dist/%,%,$^)
 
 build/check: tests/check.c $(SOURCES) src/game.h src/screen.h src/font.h
